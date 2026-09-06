@@ -1,0 +1,7 @@
+﻿apiVersion: 1
+providers:
+  - name: hrms
+    folder: HRMS
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
