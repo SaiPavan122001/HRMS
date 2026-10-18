@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
+# HRMS
 
-## Project info
+A full-stack Human Resource Management platform covering employee attendance, leave, timesheets and role-based access control, with real-time notifications and a production-style observability stack.
 
-**URL**: https://lovable.dev/projects/6c8797b8-742e-4be6-8715-1ed323c812c0
+**Stack:** Java 21 · Spring Boot · Spring Security (JWT + OAuth2) · JPA/Hibernate · PostgreSQL · Redis · Kafka · WebSocket · React · TypeScript · Vite · Tailwind CSS · shadcn/ui · Docker · Prometheus · Grafana
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Attendance:** clock in/out, breaks and monthly reports
+- **Leave management:** employees submit leave requests; managers get in-app and email notifications and approve or reject
+- **Timesheets:** submit, approve and reject flows with email notifications
+- **RBAC:** role-based access control with Super Admin and assignable roles
+- **Authentication:** email sign-up with verification, sign-in, refresh-token rotation, logout, forgot/reset password, plus Google and GitHub OAuth sign-in
+- **Real-time notifications:** WebSocket-driven notification bell
+- **Asynchronous email:** verification, reset, leave, timesheet and reminder emails are sent through Kafka consumers over real SMTP (set `MAIL_ENABLED=false` to log instead during development)
+- **Audit logs:** admin endpoint at `/api/v1/admin/audit-logs`
+- **Rate limiting:** 20 requests/minute on `/api/v1/auth/*`
+- **Observability:** Prometheus scrapes `/actuator/prometheus`; a Grafana dashboard is pre-provisioned
+- **API docs:** Swagger UI
 
-**Use Lovable**
+## Architecture
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c8797b8-742e-4be6-8715-1ed323c812c0) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+React + TypeScript (Vite)  ──REST / WebSocket──▶  Spring Boot API
+                                                    │
+                       ┌────────────┬───────────────┼───────────────┐
+                       ▼            ▼               ▼               ▼
+                  PostgreSQL      Redis           Kafka        Prometheus ▶ Grafana
+                  (data, RBAC)  (cache / limits)  (email &
+                                                  notification
+                                                  consumers)
 ```
 
-**Edit a file directly in GitHub**
+## Repository layout
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Path | Contents |
+|---|---|
+| `backend/` | Spring Boot service (Maven, Dockerfile) |
+| `frontend/` | React + TypeScript web app |
+| `docker/` | Docker Compose stack: Postgres, Redis, Kafka, Prometheus, Grafana, Kafka UI |
+| `supabase/migrations/` | Original schema migrations, kept as the schema source of truth |
+| `README-SETUP.md` | Full setup, OAuth, email and verification guide |
 
-**Use GitHub Codespaces**
+## Quick start
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Prerequisites: Java 21, Maven 3.9+, Node 20+, Docker Desktop.
 
-## What technologies are used for this project?
+```bash
+cp .env.example .env        # fill in database, JWT_SECRET, mail and OAuth values
+docker compose -f docker/docker-compose.yml up -d --build
+```
 
-This project is built with:
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8081/api/v1 |
+| Swagger UI | http://localhost:8081/swagger-ui.html |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3001 |
+| Kafka UI | http://localhost:8085 |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Local development
 
-## How can I deploy this project?
+```bash
+# infrastructure only
+docker compose -f docker/docker-compose.yml up -d postgres redis kafka
 
-Simply open [Lovable](https://lovable.dev/projects/6c8797b8-742e-4be6-8715-1ed323c812c0) and click on Share -> Publish.
+# backend
+cd backend && mvn spring-boot:run
 
-## Can I connect a custom domain to my Lovable project?
+# frontend (Vite proxies /api to :8081)
+cd frontend && npm install && npm run dev
+```
 
-Yes, you can!
+The first admin user, OAuth setup, email configuration and a full verification checklist are in [README-SETUP.md](README-SETUP.md).
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Author
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Adusumalli Sai Pavan: [GitHub](https://github.com/SaiPavan122001) · [LinkedIn](https://www.linkedin.com/in/adusumalli-sai-pavan-111836208/) · [Portfolio](https://saipavan122001.github.io/Pavan-Portfolio/)
